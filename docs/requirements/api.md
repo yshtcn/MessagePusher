@@ -95,35 +95,6 @@ GET /api/v1/message/{message_id}
 }
 ```
 
-### 2. API 密钥管理
-
-#### 2.1 获取 API 密钥
-
-```
-GET /api/v1/token
-```
-
-**请求参数：**
-
-| 参数名 | 类型 | 必填 | 描述 |
-|--------|------|------|------|
-| username | string | 是 | 用户名 |
-| password | string | 是 | 密码 |
-
-**响应：**
-
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "token": "api_token_123",
-    "default_channels": ["1", "2"],
-    "default_ai": "1"
-  }
-}
-```
-
 ## 错误码
 
 | 错误码 | 描述 |
@@ -135,7 +106,6 @@ GET /api/v1/token
 | 1004 | AI 渠道不存在 |
 | 1005 | 消息发送失败 |
 | 1006 | 消息不存在 |
-| 2001 | 用户名或密码错误 |
 
 ## 安全性考虑
 

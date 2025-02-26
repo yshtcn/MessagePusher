@@ -16,63 +16,53 @@ MessagePusher 项目使用 SQLite 作为主要存储系统，用于存储结构�
 
 ## 数据模型
 
-### 1. 用户表 (users)
-
-存储系统用户信息。
-
-| 字段名 | 类型 | 描述 |
-|--------|------|------|
-| id | string | 主键，用户ID |
-| username | string | 用户名，唯一 |
-| password_hash | string | 密码哈希 |
-| role | enum | 用户角色（admin/user） |
-| created_at | timestamp | 创建时间 |
-| updated_at | timestamp | 更新时间 |
-| last_login_at | timestamp | 最后登录时间 |
-| status | enum | 用户状态（活跃/禁用） |
-
-### 2. 消息渠道表 (channels)
+### 1. 消息渠道表 (channels)
 
 存储消息推送渠道配置。
 
 | 字段名 | 类型 | 描述 |
 |--------|------|------|
 | id | string | 主键，渠道ID |
-| user_id | string | 外键，关联用户表 |
 | name | string | 渠道名称 |
-| type | string | 渠道类型（telegram/bark/pushdeer/custom） |
-| config | json | 渠道配置（JSON格式） |
+| api_url | string | API接口地址 |
+| method | string | 请求方法（GET/POST/PUT等） |
+| content_type | string | 内容类型（form/json/xml等） |
+| params | json | 参数映射（JSON格式，定义如何将消息字段映射到API参数） |
+| headers | json | 请求头（JSON格式，可为null） |
+| placeholders | json | 占位符值（JSON格式，如API密钥等） |
 | proxy | json | 代理配置（JSON格式，可为null） |
 | max_length | integer | 最大消息长度 |
 | created_at | timestamp | 创建时间 |
 | updated_at | timestamp | 更新时间 |
 | status | enum | 渠道状态（启用/禁用） |
 
-### 3. AI渠道表 (ai_channels)
+### 2. AI渠道表 (ai_channels)
 
 存储AI服务配置。
 
 | 字段名 | 类型 | 描述 |
 |--------|------|------|
 | id | string | 主键，AI渠道ID |
-| user_id | string | 外键，关联用户表 |
 | name | string | AI渠道名称 |
-| type | string | AI类型（openai/wenxin/xunfei） |
-| config | json | AI配置（JSON格式） |
-| prompt | text | 自定义Prompt（可为null） |
+| api_url | string | API接口地址 |
+| method | string | 请求方法（通常是POST） |
+| model | string | 模型名称 |
+| params | json | 模型参数（JSON格式，如temperature、max_tokens等） |
+| headers | json | 请求头（JSON格式，如Authorization等） |
+| placeholders | json | 占位符值（JSON格式，如API密钥等） |
+| prompt | text | 自定义Prompt模板（可为null） |
 | proxy | json | 代理配置（JSON格式，可为null） |
 | created_at | timestamp | 创建时间 |
 | updated_at | timestamp | 更新时间 |
 | status | enum | 渠道状态（启用/禁用） |
 
-### 4. API令牌表 (api_tokens)
+### 3. API令牌表 (api_tokens)
 
 存储API访问令牌。
 
 | 字段名 | 类型 | 描述 |
 |--------|------|------|
 | id | string | 主键，令牌ID |
-| user_id | string | 外键，关联用户表 |
 | name | string | 令牌名称 |
 | token | string | 访问令牌，唯一 |
 | default_channels | json | 默认渠道ID列表（JSON数组） |
@@ -82,14 +72,13 @@ MessagePusher 项目使用 SQLite 作为主要存储系统，用于存储结构�
 | expires_at | timestamp | 过期时间（可为null） |
 | status | enum | 令牌状态（启用/禁用） |
 
-### 5. 消息表 (messages)
+### 4. 消息表 (messages)
 
 存储发送的消息。
 
 | 字段名 | 类型 | 描述 |
 |--------|------|------|
 | id | string | 主键，消息ID |
-| user_id | string | 外键，关联用户表 |
 | api_token_id | string | 外键，关联API令牌表 |
 | title | string | 消息标题（可为null） |
 | content | text | 消息内容（可为null） |
@@ -100,7 +89,7 @@ MessagePusher 项目使用 SQLite 作为主要存储系统，用于存储结构�
 | created_at | timestamp | 创建时间 |
 | updated_at | timestamp | 更新时间 |
 
-### 6. 消息渠道关联表 (message_channels)
+### 5. 消息渠道关联表 (message_channels)
 
 存储消息与渠道的关联关系和发送状态。
 
@@ -115,7 +104,7 @@ MessagePusher 项目使用 SQLite 作为主要存储系统，用于存储结构�
 | created_at | timestamp | 创建时间 |
 | updated_at | timestamp | 更新时间 |
 
-### 7. 消息AI处理表 (message_ai)
+### 6. 消息AI处理表 (message_ai)
 
 存储消息的AI处理结果。
 
@@ -132,7 +121,7 @@ MessagePusher 项目使用 SQLite 作为主要存储系统，用于存储结构�
 | created_at | timestamp | 创建时间 |
 | updated_at | timestamp | 更新时间 |
 
-### 8. 系统配置表 (system_config)
+### 7. 系统配置表 (system_config)
 
 存储系统全局配置信息。
 
@@ -148,33 +137,108 @@ MessagePusher 项目使用 SQLite 作为主要存储系统，用于存储结构�
 
 为提高查询性能，需要在以下字段上创建索引：
 
-1. users 表：username
-2. channels 表：user_id, type
-3. ai_channels 表：user_id, type
-4. api_tokens 表：user_id, token
-5. messages 表：user_id, api_token_id, created_at
-6. message_channels 表：message_id, channel_id, status
-7. message_ai 表：message_id, ai_channel_id, status
+1. channels 表：api_url
+2. ai_channels 表：api_url, model
+3. api_tokens 表：token
+4. messages 表：api_token_id, created_at
+5. message_channels 表：message_id, channel_id, status
+6. message_ai 表：message_id, ai_channel_id, status
 
 ## 关系图
 
 ```
-users
-  ↑
+channels
   |
-  +--- channels
+  +--- message_channels
+        |
+        v
+messages --- message_ai --- ai_channels
+  ^
   |
-  +--- ai_channels
-  |
-  +--- api_tokens
-  |
-  +--- messages ----+
-                    |
-                    +--- message_channels --- channels
-                    |
-                    +--- message_ai -------- ai_channels
+api_tokens
 
 system_config  (独立表，不与其他表关联)
+```
+
+## 渠道配置示例
+
+### Telegram 渠道配置示例
+
+```json
+{
+  "api_url": "https://api.telegram.org/bot{token}/sendMessage",
+  "method": "POST",
+  "content_type": "json",
+  "params": {
+    "chat_id": "{chat_id}",
+    "text": "{content}",
+    "parse_mode": "HTML"
+  },
+  "headers": {},
+  "placeholders": {
+    "token": "YOUR_BOT_TOKEN",
+    "chat_id": "YOUR_CHAT_ID"
+  }
+}
+```
+
+### Bark 渠道配置示例
+
+```json
+{
+  "api_url": "https://api.day.app/{device_key}/{title}/{content}",
+  "method": "GET",
+  "content_type": "form",
+  "params": {
+    "url": "{url}"
+  },
+  "headers": {},
+  "placeholders": {
+    "device_key": "YOUR_DEVICE_KEY"
+  }
+}
+```
+
+## AI渠道配置示例
+
+### OpenAI 配置示例
+
+```json
+{
+  "api_url": "https://api.openai.com/v1/chat/completions",
+  "method": "POST",
+  "model": "gpt-3.5-turbo",
+  "params": {
+    "temperature": 0.7,
+    "max_tokens": 1000
+  },
+  "headers": {
+    "Authorization": "Bearer {api_key}"
+  },
+  "placeholders": {
+    "api_key": "YOUR_API_KEY"
+  }
+}
+```
+
+### 文心一言配置示例
+
+```json
+{
+  "api_url": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions",
+  "method": "POST",
+  "model": "ernie-bot-4",
+  "params": {
+    "temperature": 0.7,
+    "top_p": 0.8
+  },
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "placeholders": {
+    "access_token": "YOUR_ACCESS_TOKEN"
+  }
+}
 ```
 
 ## 数据库迁移
@@ -188,17 +252,9 @@ system_config  (独立表，不与其他表关联)
 
 ## 数据安全
 
-1. 敏感数据（如密码、API密钥）应使用强哈希算法或加密存储
-2. 实现行级权限控制，确保用户只能访问自己的数据
-3. 定期备份数据库，并测试恢复流程
-4. 实现审计日志，记录关键操作
-
-## 性能考虑
-
-1. 对于大型表（如消息表），考虑分区策略
-2. 使用适当的索引优化查询性能
-3. 考虑使用读写分离架构，提高并发处理能力
-4. 对于频繁访问的数据，使用缓存减轻数据库负担
+1. 敏感数据（如API密钥）应使用强哈希算法或加密存储
+2. 定期备份数据库，并测试恢复流程
+3. 实现审计日志，记录关键操作
 
 ## 扩展性
 
@@ -222,10 +278,6 @@ system_config  (独立表，不与其他表关联)
    - 设置表之间的外键关系
 
 3. **初始数据填充**
-   - 创建默认管理员用户
-     - 用户名和密码从配置文件中读取
-     - 角色设置为`admin`
-     - 如果配置文件中未指定，则使用默认值（用户名：admin，密码：随机生成并显示在日志中）
    - 初始化系统配置表
      - 设置默认的系统参数
      - 配置默认的消息队列和重试策略
@@ -254,8 +306,8 @@ system_config  (独立表，不与其他表关联)
 
 1. **文件存储结构**
    - URL抓取的完整内容存储为文件，而不是直接存入数据库
-   - 文件存储在配置的目录下，默认为`data/files/{user_id}/{yyyy-mm-dd}/{message_id}.html`
-   - 支持按用户和日期分目录存储，便于管理和备份
+   - 文件存储在配置的目录下，默认为`data/files/{yyyy-mm-dd}/{message_id}.html`
+   - 支持按日期分目录存储，便于管理和备份
 
 2. **内容访问机制**
    - 每条消息生成唯一的随机`view_token`，用于构建访问URL
