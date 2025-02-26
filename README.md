@@ -29,7 +29,31 @@ MessagePusher 是一个统一的消息推送服务，支持多种消息渠道和
 - [HTTP管理模块](docs/requirements/http_management.md)
 - [AI模块](docs/requirements/ai_module.md)
 - [中枢模块](docs/requirements/core_module.md)
+- [项目进度报告](docs/progress_report.md)
 
-## 开发中
+## 开发进度
 
-本项目正在开发中，敬请期待。
+项目当前处于开发阶段，已完成以下模块：
+
+- ✅ **数据库模块**：完成数据库初始化和基本的增删查改操作
+- ✅ **核心模块**：完成任务队列、任务调度器、消息处理器、错误处理器的实现
+- 🔄 **API模块**：部分完成，基本功能已实现，部分高级功能在开发中
+- 📝 **HTTP管理模块**：计划中
+- 📝 **AI模块**：计划中
+
+详细进度请查看[项目进度报告](docs/progress_report.md)。
+
+## 测试状态
+
+- ✅ 数据库模块测试：全部通过
+- ✅ 核心模块测试：全部通过
+- ⚠️ API模块测试：部分通过
+- ✅ API集成测试：全部通过
+
+## 贡献
+
+欢迎提交Issue和Pull Request。
+
+## 许可证
+
+本项目采用MIT许可证。
