@@ -83,6 +83,9 @@ def push_message() -> Dict[str, Any]:
     
     # 获取AI渠道
     ai_channel = params.get('ai_channel')
+    if not ai_channel:
+        # 尝试从'ai'参数获取
+        ai_channel = params.get('ai')
     if not ai_channel and api_token.default_ai:
         # 使用API令牌的默认AI渠道
         ai_channel = api_token.default_ai
@@ -92,16 +95,20 @@ def push_message() -> Dict[str, Any]:
         message_repo = MessageRepository()
         message = message_repo.create(message_data)
         
-        # 验证渠道是否存在
+        # 处理渠道列表
+        if not channel_list:
+            # 如果没有提供渠道，使用API令牌的默认渠道
+            channel_list = api_token.default_channels
+        
         if channel_list:
             channel_repo = ChannelRepository()
+            message_channel_repo = MessageChannelRepository(db_connection=None)
             valid_channels = []
             for channel_id in channel_list:
                 channel = channel_repo.get_channel(channel_id)
                 if channel and channel.status == 'enabled':
                     valid_channels.append(channel_id)
                     # 创建消息渠道关联
-                    message_channel_repo = MessageChannelRepository(db_connection=None)
                     message_channel_repo.add_channel({
                         'id': str(uuid.uuid4()),
                         'message_id': message_id,
@@ -119,6 +126,7 @@ def push_message() -> Dict[str, Any]:
                     'data': None
                 }), 400
             
+            # 更新channel_list为只包含有效的渠道
             channel_list = valid_channels
         
         # 验证AI渠道是否存在
@@ -219,7 +227,7 @@ def get_message_status(message_id: str) -> Dict[str, Any]:
         channel_repo = ChannelRepository()
         channels_status = []
         
-        message_channels = message_repo.get_message_channels(message_id)
+        message_channels = message.get_message_channels()
         for mc in message_channels:
             channel = channel_repo.get_channel(mc.channel_id)
             if channel:
@@ -236,7 +244,7 @@ def get_message_status(message_id: str) -> Dict[str, Any]:
         ai_channel_repo = AIChannelRepository()
         ai_status = None
         
-        message_ai_list = message_repo.get_message_ai(message_id)
+        message_ai_list = message.get_message_ai()
         if message_ai_list and len(message_ai_list) > 0:
             message_ai = message_ai_list[0]
             ai_channel = ai_channel_repo.get_ai_channel(message_ai.ai_channel_id)
